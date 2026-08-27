@@ -14,9 +14,37 @@ sequenceDiagram
     Serveur-->>Client: Renvoie les fichiers images
 ```
 
+```mermaid
+gantt
+    title Planning de développement
+    dateFormat  YYYY-MM-DD
+    section Conception
+    Design UI      :des1, 2026-09-01, 5d
+    Architecture   :des2, after des1, 3d
+    section Code
+    Développement  :active, dev1, after des2, 12d
+    Tests          :test1, after dev1, 4d
+```
+
+```mermaid
+pie title Répartition des tâches de l'équipe
+    "Développement" : 45
+    "Design" : 25
+    "Tests" : 15
+    "Gestion" : 15
+```
+
+```mermaid
+flowchart LR
+  a-->b
+  a==>c
+  c-.->a
+  a@{shape: db}
+  b@{shape: disk}
+```
+
 | col1 | col2 | col3 |
 | - | - | - |
 |1| 2 | 3 |
 | 4 | 5 | 6 |
-
 
