@@ -1,6 +1,6 @@
 <ul align="center">
-    <h1>☁️ TradeCorp Data Platform</h1>
-    <p>Pipeline ETL cloud automatisé avec Spark, Docker et Airflow</p>
+    <h1 align="center">☁️ TradeCorp Data Platform</h1>
+    <p align="center">Pipeline ETL cloud automatisé avec Spark, Docker et Airflow</p>
     <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white" />
     <img src="https://img.shields.io/badge/Apache%20Spark-3.5-e36209?logo=apachespark&logoColor=white" />
     <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
