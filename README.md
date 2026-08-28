@@ -1,12 +1,14 @@
 <ul align="center">
     <h1 align="center">☁️ TradeCorp Data Platform</h1>
     <p align="center">Pipeline ETL cloud automatisé avec Spark, Docker et Airflow</p>
-    <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white" />
-    <img src="https://img.shields.io/badge/Apache%20Spark-3.5-e36209?logo=apachespark&logoColor=white" />
-    <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
-    <img src="https://img.shields.io/badge/Apache%20Airflow-017CEE?logo=apacheairflow&logoColor=white" />
-    <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white" />
-    <img src="https://img.shields.io/badge/Azure-ADLS%20Gen2-0078D4?logo=microsoftazure&logoColor=white" />
+    <ul align="center>
+        <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white" />
+        <img src="https://img.shields.io/badge/Apache%20Spark-3.5-e36209?logo=apachespark&logoColor=white" />
+        <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
+        <img src="https://img.shields.io/badge/Apache%20Airflow-017CEE?logo=apacheairflow&logoColor=white" />
+        <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white" />
+        <img src="https://img.shields.io/badge/Azure-ADLS%20Gen2-0078D4?logo=microsoftazure&logoColor=white" />
+    </ul">
 </ul>
 
 ## 📋 Table des matières
