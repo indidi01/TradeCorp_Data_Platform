@@ -1,0 +1,62 @@
+services:
+  spark:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    ports:
+      - "8888:8888" # JupyterLab
+      - "4040:4040" # Spark UI
+    container_name: tradecorp_spark
+    volumes:
+     - ./notebooks:/home/jovyan/work
+     - ./src:/home/jovyan/src
+     - ./tests:/home/jovyan/tests
+     - ./data:/home/jovyan/data
+    env_file:
+      - .env
+  
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: tradecorp
+      POSTGRES_PASSWORD: tradecorp
+      POSTGRES_DB: tradecorp
+    ports:
+      - "5433:5432" # Métadonnées Airflow
+    container_name: tradecorp_postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tradecorp -d tradecorp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow # FROM apache/airflow + requirements.txt
+    container_name: tradecorp_airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://tradecorp:tradecorp@postgres/tradecorp
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    ports: [8081:8080]
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./.env:/opt/airflow/.env
+      - /var/run/docker.sock:/var/run/docker.sock # Pour DockerOperator
+    command: >
+      bash -c "
+        airflow db migrate &&
+        airflow users create --password admin --username admin --firstname Admin --lastname Admin --role Admin --email admin@admin.com &&
+        airflow webserver &&
+        airflow scheduler
+      "
+    
+volumes:
+  pgdata:

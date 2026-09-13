@@ -1,0 +1,9 @@
+# pyspark
+pandas
+numpy
+pytest
+pytest-spark
+psycopg2-binary
+ipykernel
+python-dotenv
+azure-storage-blob

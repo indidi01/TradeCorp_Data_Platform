@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cours — Apache Airflow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root { --bg:#0F1117; --surface:#161B27; --surface2:#1E2535; --border:#2A3347; --accent:#017CEE; --accent2:#00C7D4; --text:#E8EAF0; --muted:#8B95A8; --green:#2ECC71; --orange:#E67E22; --red:#E74C3C; --yellow:#FFE66D; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(15,17,23,0.96); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 2rem; height:54px; }
+  .nav-logo { font-family:'JetBrains Mono',monospace; font-size:.85rem; color:var(--accent); margin-right:2rem; white-space:nowrap; }
+  .nav-tabs { display:flex; flex:1; overflow-x:auto; }
+  .nav-tab { padding:0 1rem; height:54px; display:flex; align-items:center; font-size:.8rem; font-weight:500; color:var(--muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; white-space:nowrap; }
+  .nav-tab:hover { color:var(--text); }
+  .nav-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .page { display:none; padding-top:54px; min-height:100vh; }
+  .page.active { display:block; }
+  .hero { background:linear-gradient(135deg,#0F1117,#161B27); padding:3.5rem 2rem 2.5rem; text-align:center; border-bottom:1px solid var(--border); position:relative; }
+  .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(1,124,238,.08) 0%, transparent 70%); }
+  .hero h1 { font-size:clamp(1.8rem,4vw,2.8rem); font-weight:700; margin-bottom:.6rem; position:relative; }
+  .hero h1 span { color:var(--accent); }
+  .hero p { font-size:.95rem; color:var(--muted); max-width:600px; margin:0 auto; position:relative; }
+  .container { max-width:900px; margin:0 auto; padding:2.5rem 2rem; }
+  h2 { font-size:1.4rem; font-weight:700; margin:2rem 0 1rem; color:var(--text); }
+  h2:first-child { margin-top:0; }
+  h3 { font-size:1.05rem; font-weight:600; margin:1.5rem 0 .6rem; color:var(--accent2); }
+  p { font-size:.92rem; color:var(--text); margin-bottom:.9rem; }
+  p.muted { color:var(--muted); }
+  ul { margin:.4rem 0 1rem 1.4rem; }
+  li { font-size:.9rem; color:var(--text); margin-bottom:.35rem; }
+  code { font-family:'JetBrains Mono',monospace; color:var(--accent2); font-size:.85em; background:rgba(0,199,212,.08); padding:.1em .35em; border-radius:4px; }
+  pre { background:#0A0D14; border:1px solid var(--border); border-radius:8px; padding:1rem 1.2rem; overflow-x:auto; margin:.8rem 0 1.2rem; }
+  pre code { background:none; padding:0; color:#9FE1CB; font-size:.8rem; line-height:1.6; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.2rem 1.4rem; margin:1rem 0; }
+  .card-title { font-weight:700; font-size:.95rem; margin-bottom:.5rem; color:var(--text); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem; margin:1rem 0; }
+  .callout { border-left:4px solid; border-radius:8px; padding:.9rem 1.1rem; margin:1rem 0; font-size:.88rem; }
+  .callout.info { border-color:var(--accent); background:rgba(1,124,238,.07); }
+  .callout.warn { border-color:var(--orange); background:rgba(230,126,34,.08); }
+  .callout.ok { border-color:var(--green); background:rgba(46,204,113,.07); }
+  .callout.danger { border-color:var(--red); background:rgba(231,76,60,.08); }
+  .callout strong { color:inherit; }
+  table { width:100%; border-collapse:collapse; margin:1rem 0 1.4rem; font-size:.86rem; }
+  th { background:var(--surface2); color:var(--accent); text-align:left; padding:.6rem .8rem; border-bottom:2px solid var(--border); font-weight:600; }
+  td { padding:.6rem .8rem; border-bottom:1px solid var(--border); color:var(--text); vertical-align:top; }
+  tr:hover td { background:rgba(255,255,255,.02); }
+  .dag { display:flex; align-items:center; justify-content:center; gap:.6rem; flex-wrap:wrap; margin:1.2rem 0; }
+  .task { background:var(--surface2); border:2px solid var(--accent); border-radius:10px; padding:.7rem 1rem; font-family:'JetBrains Mono',monospace; font-size:.78rem; text-align:center; min-width:150px; }
+  .task small { display:block; color:var(--muted); font-family:'Inter',sans-serif; font-size:.7rem; margin-top:.25rem; }
+  .arrow { color:var(--accent); font-size:1.4rem; }
+  .keypoint { display:flex; gap:.9rem; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:.9rem 1.1rem; margin-bottom:.8rem; }
+  .keypoint .n { font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--bg); background:var(--accent); border-radius:6px; min-width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:.85rem; }
+  .keypoint div p { margin:0; }
+  .keypoint b { color:var(--text); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">🌀 Cours Airflow</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('p1',this)">1. Pourquoi</button>
+    <button class="nav-tab" onclick="showPage('p2',this)">2. Architecture</button>
+    <button class="nav-tab" onclick="showPage('p3',this)">3. Le DAG</button>
+    <button class="nav-tab" onclick="showPage('p4',this)">4. Opérateurs</button>
+    <button class="nav-tab" onclick="showPage('p5',this)">5. Scheduler & Sensors</button>
+    <button class="nav-tab" onclick="showPage('p6',this)">6. Vers le DAG TradeCorp</button>
+    <button class="nav-tab" onclick="showPage('p7',this)">7. À retenir</button>
+  </div>
+</nav>
+
+<!-- ═══════════════ 1. POURQUOI ═══════════════ -->
+<div id="p1" class="page active">
+  <div class="hero">
+    <h1>Apache <span>Airflow</span></h1>
+    <p>Orchestrer, planifier et surveiller des pipelines de données — sans intervention humaine.</p>
+  </div>
+  <div class="container">
+    <h2>Le problème de départ</h2>
+    <p>Votre pipeline TradeCorp fonctionne. Mais aujourd'hui, pour le faire tourner, il faut qu'un humain ouvre un terminal et tape quatre commandes dans le bon ordre :</p>
+<pre><code>python  src/fetch_exchange_rates.py
+spark-submit src/reader.py
+spark-submit src/transformer.py
+spark-submit src/writer.py</code></pre>
+    <p>Chaque nuit à 6h. Sans se tromper d'ordre. Sans oublier. Et si la deuxième commande plante, il faut s'en rendre compte, comprendre pourquoi, et relancer à la main.</p>
+
+    <h3>Pourquoi pas un simple cron ?</h3>
+    <p><code>cron</code> (Linux) ou le Planificateur de tâches (Windows) savent lancer une commande à heure fixe. Mais ils ne savent pas :</p>
+    <ul>
+      <li>gérer des <b>dépendances</b> entre étapes (« lance B seulement si A a réussi »)</li>
+      <li><b>réessayer</b> automatiquement une étape qui a échoué</li>
+      <li>garder un <b>historique</b> lisible de ce qui a tourné, quand, et avec quel résultat</li>
+      <li>vous <b>montrer</b> visuellement où ça bloque</li>
+    </ul>
+
+    <div class="callout info">
+      <strong>Un orchestrateur</strong> fait exactement cela : il exécute des étapes dans un ordre défini, gère les échecs, conserve l'historique, et expose une interface pour tout surveiller. Airflow est l'orchestrateur open-source de référence en Data Engineering.
+    </div>
+
+    <h3>Un peu d'histoire</h3>
+    <p class="muted">Créé chez Airbnb en 2014 par Maxime Beauchemin pour orchestrer leurs pipelines internes, ouvert en open-source en 2015, projet Apache de premier niveau depuis 2019. Aujourd'hui utilisé par des milliers d'entreprises.</p>
+  </div>
+</div>
+
+<!-- ═══════════════ 2. ARCHITECTURE ═══════════════ -->
+<div id="p2" class="page">
+  <div class="container">
+    <h2>Les composants d'Airflow</h2>
+    <p>Airflow n'est pas un seul programme, mais plusieurs qui coopèrent :</p>
+
+    <div class="grid">
+      <div class="card"><div class="card-title">🌐 Webserver</div><p class="muted">L'interface web (port 8080). Vous y voyez vos DAGs, l'état de chaque exécution, les logs. Vous pouvez déclencher ou relancer des tâches à la main.</p></div>
+      <div class="card"><div class="card-title">⏱️ Scheduler</div><p class="muted">Le chef d'orchestre. Il lit vos DAGs en permanence, décide quelles tâches doivent être lancées et quand, et les envoie à l'executor. <b>C'est lui qui fait tourner le pipeline</b>, pas le webserver.</p></div>
+      <div class="card"><div class="card-title">🗄️ Base de métadonnées</div><p class="muted">Une base PostgreSQL où Airflow stocke tout : la liste des DAGs, l'historique de chaque exécution, le statut de chaque tâche, les utilisateurs, les connexions. Sans elle, pas de mémoire.</p></div>
+      <div class="card"><div class="card-title">⚙️ Executor</div><p class="muted">La façon dont les tâches sont réellement exécutées. Nous utilisons <code>LocalExecutor</code> : les tâches tournent en parallèle sur la même machine.</p></div>
+    </div>
+
+    <h3>Les executors</h3>
+    <table>
+      <tr><th>Executor</th><th>Fonctionnement</th><th>Usage</th></tr>
+      <tr><td><code>SequentialExecutor</code></td><td>Une tâche à la fois, avec SQLite</td><td>Tests uniquement</td></tr>
+      <tr><td><code>LocalExecutor</code></td><td>Plusieurs tâches en parallèle, sur une machine, avec PostgreSQL</td><td><b>Notre cas</b> — développement et petits déploiements</td></tr>
+      <tr><td><code>CeleryExecutor</code></td><td>Tâches distribuées sur plusieurs machines (workers)</td><td>Production à grande échelle</td></tr>
+    </table>
+
+    <h3>Pourquoi Docker ?</h3>
+    <p>Airflow a besoin de Python, d'une base PostgreSQL, d'un scheduler et d'un webserver qui tournent en même temps. L'installer nativement sur Windows est notoirement pénible. Avec Docker Compose, tout démarre en une commande — exactement la logique du Jalon 1.</p>
+<pre><code>services:
+  postgres:     # métadonnées Airflow
+  airflow:      # webserver + scheduler
+  spark:        # votre pipeline (déjà là)</code></pre>
+  </div>
+</div>
+
+<!-- ═══════════════ 3. LE DAG ═══════════════ -->
+<div id="p3" class="page">
+  <div class="container">
+    <h2>Le DAG — cœur d'Airflow</h2>
+    <p><b>DAG</b> = <i>Directed Acyclic Graph</i>, graphe orienté acyclique. Traduction : un ensemble de tâches reliées par des flèches, sans boucle. C'est simplement le dessin de votre pipeline.</p>
+
+    <div class="dag">
+      <div class="task">fetch_exchange_rates<small>appel API</small></div><span class="arrow">→</span>
+      <div class="task">reader<small>lecture ADLS</small></div><span class="arrow">→</span>
+      <div class="task">transformer<small>Spark</small></div><span class="arrow">→</span>
+      <div class="task">writer<small>écriture ADLS</small></div>
+    </div>
+
+    <ul>
+      <li><b>Directed</b> (orienté) : les flèches ont un sens, <code>reader</code> vient après <code>fetch_exchange_rates</code></li>
+      <li><b>Acyclic</b> (sans cycle) : impossible de revenir en arrière — sinon le pipeline ne finirait jamais</li>
+    </ul>
+
+    <h3>Anatomie d'un DAG en Python</h3>
+    <p>Un DAG est un simple fichier Python déposé dans le dossier <code>dags/</code>. Airflow le lit automatiquement.</p>
+<pre><code>from airflow import DAG
+from datetime import datetime, timedelta
+
+default_args = {
+    "owner": "tradecorp",
+    "retries": 1,                          # réessayer 1 fois en cas d'échec
+    "retry_delay": timedelta(minutes=5),   # attendre 5 min avant de réessayer
+}
+
+with DAG(
+    dag_id="tradecorp_etl_pipeline",       # nom unique du DAG
+    default_args=default_args,
+    start_date=datetime(2024, 1, 1),       # date à partir de laquelle il "existe"
+    schedule_interval="0 6 * * *",         # cron : tous les jours à 6h
+    catchup=False,                          # ne pas rattraper le passé
+    tags=["tradecorp", "etl"],
+) as dag:
+
+    # ... les tâches ici ...
+
+    t0 >> t1 >> t2 >> t3                   # l'ordre d'exécution</code></pre>
+
+    <table>
+      <tr><th>Paramètre</th><th>Rôle</th></tr>
+      <tr><td><code>dag_id</code></td><td>Identifiant unique, affiché dans l'interface</td></tr>
+      <tr><td><code>start_date</code></td><td>Date de "naissance" du DAG. Aucune exécution avant.</td></tr>
+      <tr><td><code>schedule_interval</code></td><td>Fréquence d'exécution (expression cron ou raccourci <code>@daily</code>)</td></tr>
+      <tr><td><code>catchup</code></td><td>Si <code>True</code>, Airflow rejoue toutes les exécutions manquées depuis <code>start_date</code>. Presque toujours <code>False</code>.</td></tr>
+      <tr><td><code>retries</code> / <code>retry_delay</code></td><td>Politique de nouvelle tentative en cas d'échec</td></tr>
+      <tr><td><code>>></code></td><td>Définit la dépendance : <code>a >> b</code> = « b attend que a réussisse »</td></tr>
+    </table>
+
+    <div class="callout warn">
+      <strong>Piège classique :</strong> <code>start_date=datetime(2024,1,1)</code> avec <code>catchup=True</code> déclencherait des centaines d'exécutions pour rattraper tous les jours depuis 2024. Mettez toujours <code>catchup=False</code> sauf besoin explicite.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 4. OPÉRATEURS ═══════════════ -->
+<div id="p4" class="page">
+  <div class="container">
+    <h2>Les opérateurs — ce que fait une tâche</h2>
+    <p>Un <b>Operator</b> est un modèle de tâche. Une <b>Task</b> est un opérateur instancié dans un DAG avec un <code>task_id</code>. Il existe des dizaines d'opérateurs ; trois couvrent la grande majorité des besoins.</p>
+
+    <h3>BashOperator — exécuter une commande shell</h3>
+<pre><code>from airflow.operators.bash import BashOperator
+
+t = BashOperator(
+    task_id="dire_bonjour",
+    bash_command="echo 'Bonjour TradeCorp' && date",
+)</code></pre>
+    <p class="muted">La commande s'exécute <b>dans le conteneur Airflow</b>. Utile pour des scripts shell, des copies de fichiers, des appels à des outils en ligne de commande installés dans ce conteneur.</p>
+
+    <h3>PythonOperator — exécuter une fonction Python</h3>
+<pre><code>from airflow.operators.python import PythonOperator
+
+def calculer():
+    total = 2 + 2
+    print(f"Résultat : {total}")
+    return total
+
+t = PythonOperator(
+    task_id="calculer",
+    python_callable=calculer,
+)</code></pre>
+    <p class="muted">La fonction s'exécute <b>dans le conteneur Airflow</b>, avec les bibliothèques Python qui y sont installées. Parfait pour un appel API, une petite transformation, une vérification.</p>
+
+    <h3>DockerOperator — lancer un conteneur</h3>
+<pre><code>from airflow.providers.docker.operators.docker import DockerOperator
+
+t = DockerOperator(
+    task_id="transformer",
+    image="tradecorp-spark",                          # l'image à lancer
+    command="spark-submit /home/jovyan/src/transformer.py",
+    docker_url="unix://var/run/docker.sock",          # accès au Docker de l'hôte
+    network_mode="tradecorp_default",                 # même réseau que les autres services
+    auto_remove=True,                                 # supprimer le conteneur à la fin
+    mount_tmp_dir=False,
+    mounts=MOUNTS,                                    # volumes src/, data/, .env
+)</code></pre>
+    <p class="muted">Airflow demande à Docker de <b>créer un conteneur éphémère</b> à partir d'une image, d'y exécuter une commande, puis de le détruire. La commande s'exécute donc <b>dans ce conteneur-là</b>, pas dans Airflow.</p>
+
+    <div class="callout danger">
+      <strong>Pourquoi le DockerOperator dans notre projet ?</strong><br>
+      Spark et Java sont installés dans le conteneur <code>tradecorp_spark</code>, pas dans le conteneur Airflow. Un <code>BashOperator</code> avec <code>spark-submit</code> répondrait <code>command not found</code>. Un <code>PythonOperator</code> avec <code>import pyspark</code> planterait sur <code>JAVA_GATEWAY_EXITED</code>. Seul le DockerOperator peut lancer le pipeline <b>dans l'environnement où Spark existe</b>.
+    </div>
+
+    <h3>Comparatif</h3>
+    <table>
+      <tr><th>Opérateur</th><th>S'exécute où ?</th><th>Bon pour</th><th>Limite</th></tr>
+      <tr><td><code>BashOperator</code></td><td>Conteneur Airflow</td><td>Commandes shell simples</td><td>Ne voit que ce qui est installé dans Airflow</td></tr>
+      <tr><td><code>PythonOperator</code></td><td>Conteneur Airflow</td><td>Logique Python légère, appels API</td><td>Idem — pas de Spark ici</td></tr>
+      <tr><td><code>DockerOperator</code></td><td>Un nouveau conteneur, depuis une image</td><td>Tout ce qui a besoin d'un environnement spécifique (Spark, Java…)</td><td>Plus de configuration (socket, réseau, volumes)</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════ 5. SCHEDULER & SENSORS ═══════════════ -->
+<div id="p5" class="page">
+  <div class="container">
+    <h2>Le scheduler — quand ça tourne</h2>
+    <p>Le scheduler vérifie en boucle : « y a-t-il un DAG dont l'heure est venue ? ». Si oui, il crée un <b>DAG run</b> (une exécution) et lance les tâches dans l'ordre des dépendances.</p>
+
+    <h3>Lire une expression cron</h3>
+<pre><code>┌───────── minute (0-59)
+│ ┌─────── heure (0-23)
+│ │ ┌───── jour du mois (1-31)
+│ │ │ ┌─── mois (1-12)
+│ │ │ │ ┌─ jour de la semaine (0-6, dimanche=0)
+│ │ │ │ │
+0 6 * * *      → tous les jours à 06:00
+0 */2 * * *    → toutes les 2 heures
+30 8 * * 1-5   → 08:30 du lundi au vendredi
+0 0 1 * *      → le 1er de chaque mois à minuit</code></pre>
+    <p class="muted">Raccourcis acceptés : <code>@hourly</code>, <code>@daily</code>, <code>@weekly</code>, <code>@monthly</code>. Pour vérifier une expression : <b>crontab.guru</b>.</p>
+
+    <h3>Les états d'une tâche</h3>
+    <table>
+      <tr><th>État</th><th>Couleur</th><th>Signification</th></tr>
+      <tr><td><code>queued</code></td><td>gris</td><td>En attente d'un slot d'exécution</td></tr>
+      <tr><td><code>running</code></td><td>vert clair</td><td>En cours</td></tr>
+      <tr><td><code>success</code></td><td>vert</td><td>Terminée sans erreur</td></tr>
+      <tr><td><code>failed</code></td><td>rouge</td><td>Échec — après épuisement des retries</td></tr>
+      <tr><td><code>up_for_retry</code></td><td>orange</td><td>Échec, nouvelle tentative programmée</td></tr>
+      <tr><td><code>upstream_failed</code></td><td>orange foncé</td><td>Pas lancée car une tâche précédente a échoué</td></tr>
+    </table>
+
+    <div class="callout ok">
+      <strong>Relancer une tâche :</strong> dans l'interface, cliquer sur la tâche → <b>Clear</b>. Airflow la remet en <code>queued</code> et la relance, ainsi que toutes celles qui en dépendent.
+    </div>
+
+    <h2>Les sensors — attendre qu'une condition soit vraie</h2>
+    <p>Un <b>Sensor</b> est un opérateur spécial qui ne fait rien… sauf attendre. Il vérifie une condition à intervalle régulier et ne passe en <code>success</code> que lorsqu'elle est remplie. Les tâches suivantes attendent avec lui.</p>
+
+    <h3>FileSensor — attendre l'arrivée d'un fichier</h3>
+<pre><code>from airflow.sensors.filesystem import FileSensor
+
+attendre_fichier = FileSensor(
+    task_id="attendre_go",
+    filepath="/opt/airflow/data/trigger/go.txt",   # le fichier attendu
+    poke_interval=30,       # vérifier toutes les 30 secondes
+    timeout=60 * 60,        # abandonner après 1 heure
+    mode="poke",
+)
+
+attendre_fichier >> t0 >> t1 >> t2 >> t3</code></pre>
+
+    <table>
+      <tr><th>Paramètre</th><th>Rôle</th></tr>
+      <tr><td><code>filepath</code></td><td>Chemin du fichier attendu, <b>vu depuis le conteneur Airflow</b></td></tr>
+      <tr><td><code>poke_interval</code></td><td>Fréquence de vérification (secondes)</td></tr>
+      <tr><td><code>timeout</code></td><td>Durée max d'attente avant de passer en <code>failed</code></td></tr>
+      <tr><td><code>mode</code></td><td><code>poke</code> : garde un slot occupé en attendant. <code>reschedule</code> : libère le slot entre deux vérifications (mieux pour de longues attentes)</td></tr>
+    </table>
+
+    <p><b>Cas d'usage TradeCorp :</b> le script MySQL legacy dépose les CSV chaque nuit à une heure variable. Plutôt que de lancer le pipeline à 6h « en espérant » que les fichiers soient là, un sensor attend leur arrivée réelle puis déclenche la suite.</p>
+
+    <div class="callout warn">
+      <strong>Attention :</strong> un sensor en mode <code>poke</code> sans <code>timeout</code> peut bloquer un slot indéfiniment. Toujours définir un timeout.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 6. DAG TRADECORP ═══════════════ -->
+<div id="p6" class="page">
+  <div class="container">
+    <h2>Le DAG TradeCorp — ce qu'il doit faire</h2>
+    <p>Voici ce que votre DAG doit accomplir à la fin du Jalon 3. Rien de nouveau côté transformation : il ne fait qu'<b>appeler vos scripts existants</b>, dans le bon ordre, chaque nuit. À vous de l'écrire.</p>
+
+    <div class="dag">
+      <div class="task">fetch_exchange_rates<small>python</small></div><span class="arrow">→</span>
+      <div class="task">reader<small>spark-submit</small></div><span class="arrow">→</span>
+      <div class="task">transformer<small>spark-submit</small></div><span class="arrow">→</span>
+      <div class="task">writer<small>spark-submit</small></div>
+    </div>
+
+    <h3>Ce que le fichier doit contenir</h3>
+    <ul>
+      <li>Les imports nécessaires : <code>DAG</code>, <code>DockerOperator</code>, <code>Mount</code>, <code>datetime</code>/<code>timedelta</code></li>
+      <li>Les <code>default_args</code> (owner, retries, retry_delay)</li>
+      <li>Le chemin du projet sur la machine hôte et la liste des volumes à monter (<code>src/</code>, <code>data/</code>, <code>.env</code>)</li>
+      <li>Le DAG lui-même : identifiant, date de début, planning quotidien à 6h, catchup désactivé, tags</li>
+      <li>Quatre tâches DockerOperator — même image, mêmes paramètres, seule la commande change</li>
+      <li>L'ordre d'exécution</li>
+    </ul>
+
+    <div class="callout info">
+      <strong>Conseil :</strong> les quatre tâches partagent 8 paramètres identiques et ne diffèrent que par leur <code>task_id</code> et leur commande. Une petite fonction qui fabrique une tâche à partir de ces deux éléments vous évitera de copier-coller quatre blocs quasi identiques — c'est exactement l'esprit de la programmation modulaire du Jalon 2.
+    </div>
+
+    <h3>Les paramètres du DockerOperator, expliqués</h3>
+    <table>
+      <tr><th>Paramètre</th><th>Pourquoi</th></tr>
+      <tr><td><code>image="tradecorp-spark"</code></td><td>L'image construite par votre <code>docker compose build</code> — celle qui contient Spark, Java et vos dépendances</td></tr>
+      <tr><td><code>docker_url="unix://var/run/docker.sock"</code></td><td>Airflow parle au démon Docker de la machine hôte via ce socket (monté dans le docker-compose)</td></tr>
+      <tr><td><code>network_mode="tradecorp_default"</code></td><td>Le conteneur éphémère rejoint le même réseau que vos autres services</td></tr>
+      <tr><td><code>auto_remove=True</code></td><td>Le conteneur est détruit à la fin — pas d'accumulation</td></tr>
+      <tr><td><code>mount_tmp_dir=False</code></td><td>Évite une erreur de montage temporaire sur Docker Desktop Windows</td></tr>
+      <tr><td><code>mounts=MOUNTS</code></td><td>Sans ça, le conteneur éphémère ne verrait ni <code>src/</code>, ni <code>data/</code>, ni le <code>.env</code></td></tr>
+    </table>
+
+    <h3>Les pièges rencontrés — et leurs solutions</h3>
+    <div class="callout danger"><strong><code>spark-submit: command not found</code></strong> → vous utilisez un BashOperator : Spark n'est pas dans le conteneur Airflow. Passer au DockerOperator.</div>
+    <div class="callout danger"><strong><code>can't open file '/home/jovyan/src/reader.py'</code></strong> → les <code>mounts</code> sont manquants ou mal configurés dans la tâche.</div>
+    <div class="callout danger"><strong><code>bind source path does not exist: /mnt/c/...</code></strong> → sur Docker Desktop Windows, le chemin hôte s'écrit <code>//c/Users/...</code>, pas <code>/mnt/c/...</code> ni <code>C:\...</code>.</div>
+    <div class="callout danger"><strong><code>bind source path does not exist: /tmp/airflowtmp...</code></strong> → ajouter <code>mount_tmp_dir=False</code>.</div>
+    <div class="callout danger"><strong>Port 8080 déjà utilisé</strong> → un autre service (Jenkins, par exemple) l'occupe. Changer le port côté hôte (<code>"8081:8080"</code>) ou arrêter l'autre service.</div>
+    <div class="callout danger"><strong>Le DAG n'apparaît pas dans l'interface</strong> → vérifier que le fichier est bien dans le dossier <code>dags/</code> monté dans le conteneur Airflow (<code>docker exec tradecorp_airflow ls /opt/airflow/dags/</code>) et qu'il n'a pas d'erreur de syntaxe Python.</div>
+
+    <h3>Le service Airflow dans docker-compose.yml</h3>
+<pre><code>airflow:
+  build:
+    context: .
+    dockerfile: Dockerfile.airflow      # FROM apache/airflow + requirements.txt
+  container_name: tradecorp_airflow
+  depends_on: [postgres]
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://tradecorp:tradecorp@postgres/tradecorp
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  ports: ["8080:8080"]
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./src:/opt/airflow/src
+    - ./.env:/opt/airflow/.env
+    - /var/run/docker.sock:/var/run/docker.sock   # indispensable au DockerOperator
+  command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname Admin --role Admin --email admin@admin.com && airflow webserver & airflow scheduler"</code></pre>
+    <p class="muted">Le <code>requirements.txt</code> doit contenir <code>apache-airflow-providers-docker</code> pour que le DockerOperator soit disponible.</p>
+  </div>
+</div>
+
+<!-- ═══════════════ 7. À RETENIR ═══════════════ -->
+<div id="p7" class="page">
+  <div class="container">
+    <h2>Ce qu'il faut retenir</h2>
+
+    <div class="keypoint"><div class="n">1</div><div><p><b>Airflow orchestre, il ne transforme pas.</b> Il lance vos scripts dans le bon ordre et surveille ; la logique métier reste dans <code>src/</code>. Si votre pipeline ne marche pas à la main avec <code>spark-submit</code>, Airflow ne le réparera pas.</p></div></div>
+    <div class="keypoint"><div class="n">2</div><div><p><b>Un DAG = un fichier Python dans <code>dags/</code>.</b> Airflow le détecte tout seul. Tâches + dépendances (<code>>></code>) + planning (<code>schedule_interval</code>).</p></div></div>
+    <div class="keypoint"><div class="n">3</div><div><p><b>Le scheduler décide, le webserver montre.</b> Si l'interface est accessible mais que rien ne se lance, c'est le scheduler qu'il faut regarder.</p></div></div>
+    <div class="keypoint"><div class="n">4</div><div><p><b>Un opérateur s'exécute quelque part de précis.</b> Bash et Python : dans le conteneur Airflow. Docker : dans un conteneur neuf créé à partir d'une image. Demandez-vous toujours « où ce code va-t-il tourner, et ce dont il a besoin y est-il installé ? »</p></div></div>
+    <div class="keypoint"><div class="n">5</div><div><p><b><code>catchup=False</code> par défaut.</b> Sinon Airflow rejoue tout le passé depuis <code>start_date</code>.</p></div></div>
+    <div class="keypoint"><div class="n">6</div><div><p><b>Les échecs sont normaux, c'est leur gestion qui compte.</b> <code>retries</code>, <code>retry_delay</code>, lecture des logs, <b>Clear</b> pour relancer. Un pipeline qui échoue proprement vaut mieux qu'un pipeline qui réussit silencieusement avec de mauvaises données.</p></div></div>
+    <div class="keypoint"><div class="n">7</div><div><p><b>L'idempotence est votre amie.</b> Relancer une tâche deux fois doit donner le même résultat — pas deux fois plus de fichiers dans le Data Lake. C'est la correction faite dans <code>writer.py</code> (suppression avant upload).</p></div></div>
+    <div class="keypoint"><div class="n">8</div><div><p><b>Un sensor attend, il ne travaille pas.</b> Toujours lui donner un <code>timeout</code>.</p></div></div>
+
+    <h3>Vocabulaire</h3>
+    <table>
+      <tr><th>Terme</th><th>Définition en une ligne</th></tr>
+      <tr><td>DAG</td><td>Le graphe de votre pipeline : tâches + ordre</td></tr>
+      <tr><td>DAG run</td><td>Une exécution du DAG à une date donnée</td></tr>
+      <tr><td>Task</td><td>Une étape du DAG (un opérateur instancié)</td></tr>
+      <tr><td>Task instance</td><td>Une tâche dans un DAG run précis (avec son statut, ses logs)</td></tr>
+      <tr><td>Operator</td><td>Le modèle qui définit ce que fait une tâche</td></tr>
+      <tr><td>Sensor</td><td>Opérateur qui attend une condition</td></tr>
+      <tr><td>Executor</td><td>La façon dont les tâches sont lancées (local, distribué…)</td></tr>
+      <tr><td>XCom</td><td>Mécanisme de partage de petites données entre tâches (non utilisé ici)</td></tr>
+    </table>
+
+    <div class="callout info">
+      <strong>Et après ?</strong> Un mini-projet séparé vous fera manipuler le <code>PythonOperator</code> sur un cas simple. Puis un brief dédié abordera <b>Azure Data Factory</b>, l'équivalent cloud managé d'Airflow.
+    </div>
+  </div>
+</div>
+
+<script>
+  function showPage(id, tab) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    tab.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+</script>
+</body>
+</html>
