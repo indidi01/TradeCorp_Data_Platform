@@ -87,7 +87,7 @@ graph LR
 ### 1. Cloner le repository
 
 ```bash
-git clone https://github.com/<user>/TradeCorp_Data_Platform.git
+git clone https://github.com/indidi01/TradeCorp_Data_Platform.git
 cd TradeCorp_Data_Platform
 ```
 ### 2. Construire et démarrer la stack
